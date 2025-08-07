@@ -82,8 +82,8 @@ spring:
       max-file-size: 50MB
       max-request-size: 50MB
   config:
-#    import: file:/app/common-config/spring-boot/${spring.profiles.active}/deployment.properties
-    import: file:C:\\Users\\ICAM\\workspace\\common-config\\spring-boot\\local\\deployment.properties
+    import: file:/app/common-config/spring-boot/${spring.profiles.active}/deployment.properties
+#    import: file:C:\\Users\\ICAM\\workspace\\common-config\\spring-boot\\local\\deployment.properties
   cache:
     type: redis
 app:
