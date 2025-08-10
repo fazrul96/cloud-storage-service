@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!-- Include Spring Boot's default Logback configuration -->
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+
+    <!-- JSON Console Appender (CloudWatch-style) -->
+    <appender name="STDOUT-JSON" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+            <providers>
+                <!-- Timestamp provider with a custom timezone and field name -->
+                <timestamp>
+                    <fieldName>timestamp</fieldName>
+                    <timeZone>GMT+8</timeZone>
+                </timestamp>
+
+                <!-- Log level provider with a custom field name -->
+                <logLevel>
+                    <fieldName>level</fieldName>
+                </logLevel>
+
+                <!-- Thread name provider with a custom field name -->
+                <threadName>
+                    <fieldName>thread</fieldName>
+                </threadName>
+
+                <!-- Logger name provider with a custom field name -->
+                <loggerName>
+                    <fieldName>logger</fieldName>
+                </loggerName>
+
+                <!-- Include MDC (Mapped Diagnostic Context) for additional contextual information -->
+                <mdc/>
+
+                <!-- Message arguments; exclude non-structured arguments for cleaner logs -->
+                <arguments>
+                    <includeNonStructuredArguments>false</includeNonStructuredArguments>
+                </arguments>
+
+                <!-- Log message provider with a custom field name -->
+                <message>
+                    <fieldName>message</fieldName>
+                </message>
+
+                <!-- Markers for any logstash-specific markers -->
+                <logstashMarkers/>
+
+                <!-- Throwable details (exceptions) nested under the 'throwable' field -->
+                <nestedField>
+                    <fieldName>throwable</fieldName>
+                    <providers>
+                        <throwableClassName>
+                            <fieldName>cause</fieldName>
+                        </throwableClassName>
+                        <throwableRootCauseClassName>
+                            <fieldName>rootCause</fieldName>
+                        </throwableRootCauseClassName>
+                        <!-- Stack trace (Shortened to 2048 chars) -->
+                        <stackTrace>
+                            <fieldName>exceptionStackTrace</fieldName>
+                            <throwableConverter class="net.logstash.logback.stacktrace.ShortenedThrowableConverter">
+                                <maxDepthPerThrowable>30</maxDepthPerThrowable>
+                                <maxLength>2048</maxLength>
+                                <shortenedClassNameLength>20</shortenedClassNameLength>
+                                <!-- Exclude reflection and proxy classes from the trace -->
+                                <exclude>^sun\.reflect\..*\.invoke</exclude>
+                                <exclude>^org\.springframework\.cglib\.proxy\.MethodProxy\.invoke</exclude>
+                                <rootCauseFirst>true</rootCauseFirst>
+                            </throwableConverter>
+                        </stackTrace>
+                    </providers>
+                </nestedField>
+            </providers>
+        </encoder>
+    </appender>
+
+    <!-- Default Console Appender (Non-JSON) -->
+    <appender name="STDOUT-DEFAULT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <!-- Enhanced pattern with traceId and spanId support (useful for distributed tracing) -->
+            <pattern>
+                %clr(%d{HH:mm:ss.SSS}){faint} %clr([%X{traceId:-},%X{spanId:-}]){yellow} %clr(%5p) %clr([%15.15t]){faint}
+                %clr(%-40.40logger{39}){cyan} %clr(%marker){blue} %clr(:){faint} %m%n%wEx
+            </pattern>
+            <charset>utf8</charset>
+        </encoder>
+    </appender>
+
+    <!-- Logger for MYSQL with WARN level to suppress excessive logging -->
+    <logger name="MYSQL" level="WARN"/>
+
+    <!-- Root logger with dynamic appender selection based on LOGGING_FORMAT environment variable -->
+    <root level="INFO">
+        <!-- Switch between JSON and default text format based on LOGGING_FORMAT -->
+        <appender-ref ref="STDOUT-${LOGGING_FORMAT:-DEFAULT}" />
+    </root>
+</configuration>

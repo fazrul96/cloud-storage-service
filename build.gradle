@@ -12,15 +12,21 @@ plugins {
 
 group = 'com.cloud'
 version = project.hasProperty('version') ? project.getProperty('version') : '1.0.0'
-
 java {
-    sourceCompatibility = 17
-    targetCompatibility = 17
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
 }
 
 ext {
     snippetsDir = file('build/generated-snippets')
 
+    SWAGGER_ANNOTATIONS_VERSION = '2.2.20'
+    SPRINGDOC_OPENAPI_VERSION = '2.4.0'
+    LOMBOK_VERSION = '1.18.36'
+    MINIO_VERSION = '8.5.14'
+    GOOGLE_API_CLIENT_VERSION = '2.4.0'
+    GOOGLE_OAUTH_CLIENT_JETTY_VERSION = '1.35.0'
+    GOOGLE_API_SERVICES_DRIVE_VERSION = 'v3-rev197-1.25.0'
     SPRING_CLOUD_IO_AWS_VERSION = '3.1.0'
     SPRING_CLOUD_ORG_AWS_VERSION = '2.2.6.RELEASE'
     SPRING_CLOUD_VERSION = '2022.0.0'
@@ -41,10 +47,27 @@ configurations {
 }
 
 dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation "org.springframework.boot:spring-boot-starter-web"
+    implementation "org.springframework.boot:spring-boot-starter-security"
+    implementation "org.springframework.boot:spring-boot-starter-oauth2-client"
+    implementation "org.springframework.boot:spring-boot-starter-oauth2-resource-server"
+    implementation "org.projectlombok:lombok:${LOMBOK_VERSION}"
+    // Swagger and OpenAPI
+    implementation "io.swagger.core.v3:swagger-annotations:${SWAGGER_ANNOTATIONS_VERSION}"
+    implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${SPRINGDOC_OPENAPI_VERSION}"
+    // MinIO Configuration
+    implementation "io.minio:minio:${MINIO_VERSION}"
+    // AWS SDK
     implementation 'software.amazon.awssdk:s3'
     implementation 'software.amazon.awssdk:auth'
-    implementation 'software.amazon.awssdk:costexplorer'
+    // Dropbox API
+    implementation 'com.dropbox.core:dropbox-core-sdk:6.1.0'
+    // Google Drive API
+    implementation "com.google.api-client:google-api-client:${GOOGLE_API_CLIENT_VERSION}"
+    implementation "com.google.oauth-client:google-oauth-client-jetty:${GOOGLE_OAUTH_CLIENT_JETTY_VERSION}"
+    implementation "com.google.apis:google-api-services-drive:${GOOGLE_API_SERVICES_DRIVE_VERSION}"
+
+    annotationProcessor "org.projectlombok:lombok:${LOMBOK_VERSION}"
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'

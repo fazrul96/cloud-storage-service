@@ -5,9 +5,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
 class StorageServiceApplicationTests {
+    @Test
+    public void contextLoads() {
 
-	@Test
-	void contextLoads() {
-	}
-
+    }
 }
