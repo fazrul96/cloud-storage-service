@@ -1,11 +1,16 @@
 spring:
   application:
-    name: storage-service
+    name: provider-service
   profiles:
     active: ${ACTIVE_PROFILE:@activeProfiles@}
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 30MB
+      max-request-size: 30MB
   config:
-    import: file:/app/common-config/spring-boot/${spring.profiles.active}/deployment.properties
-#    import: file:C:\\Users\\ICAM\\workspace\\common-config\\spring-boot\\local\\deployment.properties
+#    import: file:/app/common-config/spring-boot/${spring.profiles.active}/deployment.properties
+    import: file:C:\\Users\\ICAM\\workspace\\common-config\\spring-boot\\local\\deployment.properties
   cloud:
     aws:
       region: ${AWS_REGION:ap-southeast-1}
@@ -13,13 +18,6 @@ spring:
       secret-key: ${AWS_SECRET_KEY}
       bucket-name: ${AWS_BUCKET_NAME}
       root-folder: ${AWS_S3_ROOT_FOLDER}
-      minio:
-        endpoint: ${MINIO_ENDPOINT}
-        access-key: ${MINIO_ACCESS_KEY}
-        secret-key: ${MINIO_SECRET_KEY}
-        bucket-name: ${MINIO_BUCKET_NAME}
-        username: ${MINIO_USERNAME}
-        password: ${MINIO_PASSWORD}
     minio:
       endpoint: ${MINIO_ENDPOINT}
       access-key: ${MINIO_ACCESS_KEY}
@@ -40,7 +38,7 @@ logging:
     org.springframework.batch: ERROR
     root: ${LOGGING_LEVEL_APP_ROOT}
 server:
-  port: 8080
+  port: 8084
   address: 0.0.0.0
 springdoc:
   api-docs:

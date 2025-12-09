@@ -1,6 +1,11 @@
 package com.cloud.storage_service.constants;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class MessageConstants {
+    @NoArgsConstructor(access = AccessLevel.PRIVATE)
     public static final class ResponseMessages {
         public static final String SUCCESS = "Success";
         public static final String ERROR = "Error";
@@ -11,6 +16,7 @@ public class MessageConstants {
         public static final String DELETE_SUCCESS = "Deleted successfully!";
     }
 
+    @NoArgsConstructor(access = AccessLevel.PRIVATE)
     public static final class HttpCodes {
         public static final String OK = "200";
         public static final String CREATED = "201";
@@ -24,6 +30,7 @@ public class MessageConstants {
         public static final String INTERNAL_SERVER_ERROR = "500";
     }
 
+    @NoArgsConstructor(access = AccessLevel.PRIVATE)
     public static final class HttpDescription {
         public static final String OK_DESC = "Request successful";
         public static final String CREATED_DESC = "Successfully created";
