@@ -1,10 +1,11 @@
 package com.cloud.storage_service.constants;
 
+import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
 import java.time.format.DateTimeFormatter;
 
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class GeneralConstant {
     public static final String COLON = ":";
     public static final String SLASH = "/";
@@ -39,10 +40,27 @@ public final class GeneralConstant {
 
     public static final String CHAPTER_SEPARATOR = "-chapter-";
 
-    public static final String DEFAULT = "DEFAULT";
-    public static final String SUCCESS = "SUCCESS";
-    public static final String COMPLETED = "COMPLETED";
-    public static final String FAILED = "FAILED";
-    public static final String PENDING = "PENDING";
-    public static final String INPROGRESS = "INPROGRESS";
+    @NoArgsConstructor(access = AccessLevel.PRIVATE)
+    public static final class Language {
+        public static final String EN_US = "en_US";
+        public static final String IN_ID = "in_ID";
+    }
+
+    @NoArgsConstructor(access = AccessLevel.PRIVATE)
+    public static final class LOG4j {
+        public static final String REQUEST_ID = "requestId";
+    }
+
+    @NoArgsConstructor(access = AccessLevel.PRIVATE)
+    public static final class STATUS {
+        public static final String DEFAULT = "DEFAULT";
+        public static final String PENDING = "PENDING";
+        public static final String SUCCESS = "SUCCESS";
+        public static final String COMPLETED = "COMPLETED";
+        public static final String FAILED = "FAILED";
+        public static final String ACTIVE = "ACTIVE";
+        public static final String CANCELLED = "CANCELLED";
+        public static final String EXPIRED = "EXPIRED";
+        public static final String IN_PROGRESS = "IN-PROGRESS";
+    }
 }

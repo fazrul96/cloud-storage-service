@@ -1,100 +1,58 @@
 package com.cloud.storage_service.controller;
 
-import com.cloud.storage_service.constants.MessageConstants;
 import com.cloud.storage_service.dto.response.ApiResponseDto;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 
-import java.util.Collection;
+import java.util.UUID;
 
 /**
  * Abstract base controller to standardize API response formats across endpoints.
  * Not meant to be instantiated directly.
  */
-@SuppressWarnings({"PMD.AbstractClassWithoutAbstractMethod"})
+@Slf4j
+@NoArgsConstructor
 public abstract class BaseController {
-    protected BaseController() {
-
+    protected String getResponseMessage(HttpStatus httpStatus) {
+        return httpStatus.getReasonPhrase();
     }
 
     /**
-     * Returns a 200 OK response with a generic body.
+     * Resolves and returns the request ID. If the provided requestId is null,
+     * a new requestId will be generated.
+     *
+     * @param requestId The request ID passed in the request parameters.
+     * @return The resolved or generated request ID.
      */
-    protected <T> ResponseEntity<T> success(T body) {
-        return ResponseEntity.ok(body);
+    protected String resolveRequestId(String requestId) {
+        return (requestId == null || requestId.isBlank())
+                ? UUID.randomUUID().toString()
+                : requestId;
+    }
+
+    protected <T> ApiResponseDto<T> getResponseMessage(String language, String channel, String requestId, HttpStatus httpStatus, String status, T response, String message) {
+        ApiResponseDto<T> apiResponse = new ApiResponseDto<>(requestId, channel, language);
+        apiResponse.buildResponse(response, httpStatus, status, getResponseMessage(httpStatus));
+        apiResponse.setMessage(message);
+        return apiResponse;
+    }
+
+    protected <T> ApiResponseDto<T> getResponseMessage(String language, String channel, String requestId, HttpStatus httpStatus, String status, T response) {
+        return getResponseMessage(language, channel, requestId, httpStatus, status, response, null);
     }
 
     /**
-     * Returns a 201 Created response with a generic body.
+     * Logs the start of the request processing, including the method name and request ID.
+     *
+     * @param requestId The unique request ID for tracking.
+     * @param methodName The name of the method that is being executed.
      */
-    protected <T> ResponseEntity<T> created(T body) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(body);
+    protected void logRequest(String requestId, String methodName) {
+        log.info("[RequestId: {}] Execute {}", requestId, methodName);
     }
 
-    /**
-     * Returns a 204 No Content response.
-     */
-    protected ResponseEntity<Void> noContent() {
-        return ResponseEntity.noContent().build();
-    }
-
-    /**
-     * Returns a 500 Internal Server Error with a simple message body.
-     */
-    protected ResponseEntity<String> error(String message) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(message);
-    }
-
-    /**
-     * Returns a standardized API success response (200 OK).
-     */
-    protected <T> ResponseEntity<ApiResponseDto<T>> apiSuccess(String message, T data) {
-        return success(buildApiResponse(HttpStatus.OK, message, data));
-    }
-
-    /**
-     * Returns a standardized API created response (201 Created).
-     */
-    protected <T> ResponseEntity<ApiResponseDto<T>> apiCreated(String message, T data) {
-        return created(buildApiResponse(HttpStatus.CREATED, message, data));
-    }
-
-    /**
-     * Returns a standardized API error response with the specified status code.
-     */
-    protected <T> ResponseEntity<ApiResponseDto<T>> apiError(String message, HttpStatus status) {
-        return ResponseEntity.status(status).body(
-                new ApiResponseDto<>(
-                        MessageConstants.ResponseMessages.FAILURE,
-                        status.value(),
-                        message,
-                        null
-                )
-        );
-    }
-
-    private <T> ApiResponseDto<T> buildApiResponse(HttpStatus status, String message, T data) {
-        return new ApiResponseDto<>(
-                MessageConstants.ResponseMessages.SUCCESS,
-                status.value(),
-                message,
-                data
-        );
-    }
-
-    protected void validateRequiredParam(Object param, String fieldName) {
-        boolean isInvalid = false;
-
-        if (param == null) {
-            isInvalid = true;
-        } else if (param instanceof String && ((String) param).isBlank()) {
-            isInvalid = true;
-        } else if (param instanceof Collection && ((Collection<?>) param).isEmpty()) {
-            isInvalid = true;
-        }
-
-        if (isInvalid) {
-            throw new IllegalArgumentException(fieldName + " must not be null or empty");
-        }
+    protected void logRequest(String requestId, String methodName, Exception e) {
+        log.error("[RequestId: {}] Execute {} ERROR: {}", requestId, methodName, e.getMessage());
     }
 }

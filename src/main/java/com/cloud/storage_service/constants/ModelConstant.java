@@ -1,5 +1,9 @@
 package com.cloud.storage_service.constants;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ModelConstant {
     public static final String TBL_USER = "user";
     public static final String TBL_WEBTOONS = "webtoons";
@@ -36,6 +40,7 @@ public class ModelConstant {
     public static final String HIVETOON = "hivetoon";
     public static final String ASURA = "asura";
 
+    @NoArgsConstructor(access = AccessLevel.PRIVATE)
     public static class PortfolioTable {
         public static final String CERTIFICATIONS = "certifications";
         public static final String EDUCATIONS = "educations";
@@ -48,6 +53,7 @@ public class ModelConstant {
         public static final String SOCIAL_LINKS = "social_links";
     }
 
+    @NoArgsConstructor(access = AccessLevel.PRIVATE)
     public static class MosqueTable {
         public static final String USER_DONATIONS = "user_donations";
         public static final String LOGISTIC_INVENTORY = "logistics_inventory";
@@ -57,6 +63,7 @@ public class ModelConstant {
         public static final String ANNOUNCEMENTS = "announcements";
     }
 
+    @NoArgsConstructor(access = AccessLevel.PRIVATE)
     public static class InsuranceTable {
         public static final String PLAN = "plan";
         public static final String RULE_SET = "ruleset";

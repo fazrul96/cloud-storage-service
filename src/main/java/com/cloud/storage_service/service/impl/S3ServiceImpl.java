@@ -1,10 +1,15 @@
-package com.cloud.storage_service.service.storage;
+package com.cloud.storage_service.service.impl;
 
 import com.cloud.storage_service.config.aws.S3Configuration;
 import com.cloud.storage_service.constants.GeneralConstant;
+import com.cloud.storage_service.dto.response.UploadListResponseDto;
+import com.cloud.storage_service.dto.response.UploadResponseDto;
+import com.cloud.storage_service.exception.WebException;
+import com.cloud.storage_service.service.S3Service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -25,15 +30,13 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import static com.cloud.storage_service.util.common.StringUtils.normalizePrefix;
 import static software.amazon.awssdk.http.HttpStatusCode.NOT_FOUND;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@SuppressWarnings({
-        "PMD.AvoidReassigningParameters",
-        "PMD.AvoidInstantiatingObjectsInLoops"})
-public class S3Service {
+public class S3ServiceImpl implements S3Service {
     private final S3Client s3Client;
     private final S3Configuration s3Configuration;
     private final S3Presigner s3Presigner;
@@ -41,15 +44,67 @@ public class S3Service {
     /**
      * Upload a file to S3 with the specified key.
      */
-    public String uploadFile(String key, InputStream inputStream, long contentLength, String contentType) {
-        PutObjectRequest request = PutObjectRequest.builder()
-                .bucket(s3Configuration.getBucketName())
-                .key(key)
-                .contentType(contentType)
-                .build();
+    public UploadListResponseDto processUploadFiles(String requestId, List<MultipartFile> files, String prefix) throws WebException {
+        log.info("[RequestId: {}] Starting S3ServiceImpl.processUploadFiles()", requestId);
 
-        s3Client.putObject(request, RequestBody.fromInputStream(inputStream, contentLength));
-        return key;
+        validateFiles(files);
+
+        String normalizedPrefix = normalizePrefix(prefix);
+        List<UploadResponseDto> response = files.stream()
+                .map(file -> uploadSingleFile(requestId, file, normalizedPrefix))
+                .map(this::toUploadResponse)
+                .collect(Collectors.toList());
+
+        return new UploadListResponseDto(response);
+    }
+
+    private UploadResponseDto uploadSingleFile(String requestId, MultipartFile file, String prefix) {
+        log.info("[RequestId: {}] Starting S3ServiceImpl.uploadSingleFile()", requestId);
+
+        String key = prefix + file.getOriginalFilename();
+
+        try (InputStream inputStream = file.getInputStream()) {
+            s3Client.putObject(
+                    PutObjectRequest.builder()
+                            .bucket(s3Configuration.getBucketName())
+                            .key(key)
+                            .contentType(file.getContentType())
+                            .build(),
+                    RequestBody.fromInputStream(inputStream, file.getSize())
+            );
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to upload file: " + file.getOriginalFilename(), e);
+        }
+
+        return buildUploadResponse(key, file.getContentType(), file.getSize());
+    }
+
+    private UploadResponseDto toUploadResponse(UploadResponseDto response) {
+        return UploadResponseDto.builder()
+                .filename(response.getFilename())
+                .path(response.getPath())
+                .mimeType(response.getMimeType())
+                .url(response.getUrl())
+                .size(response.getSize())
+                .build();
+    }
+
+    private UploadResponseDto buildUploadResponse(String key, String contentType, long size) {
+        String bucket = s3Configuration.getBucketName();
+        String region = s3Configuration.getRegion();
+
+        return UploadResponseDto.builder()
+                .filename(extractFilename(key))
+                .path(key)
+                .mimeType(contentType)
+                .url(String.format("https://%s.s3.%s.amazonaws.com/%s", bucket, region, key))
+                .size(size)
+                .build();
+    }
+
+    private String extractFilename(String key) {
+        int index = key.lastIndexOf('/');
+        return (index != -1) ? key.substring(index + 1) : key;
     }
 
     /**
@@ -208,5 +263,11 @@ public class S3Service {
 
         PresignedGetObjectRequest presignedRequest = s3Presigner.presignGetObject(presignRequest);
         return presignedRequest.url().toExternalForm();
+    }
+
+    private void validateFiles(List<MultipartFile> files) throws WebException {
+        if (files == null || files.isEmpty()) {
+            throw new WebException("Uploaded file list cannot be empty");
+        }
     }
 }

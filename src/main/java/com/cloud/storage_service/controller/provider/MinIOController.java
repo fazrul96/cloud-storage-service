@@ -1,7 +1,7 @@
-package com.cloud.storage_service.controller.storage;
+package com.cloud.storage_service.controller.provider;
 
 import com.cloud.storage_service.controller.BaseController;
-import com.cloud.storage_service.service.storage.MinioService;
+import com.cloud.storage_service.service.impl.MinioServiceImpl;
 import io.minio.errors.MinioException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -33,12 +33,12 @@ import static com.cloud.storage_service.constants.MessageConstants.HttpCodes.*;
 @RestController
 @RequestMapping(path = "${app.privateApiPath}")
 @CrossOrigin(origins = "${app.basePath}")
-@Tag(name = "File Storage", description = "MinIo file storage management APIs")
+@Tag(name = "File Storage", description = "MinIo file provider management APIs")
 public class MinIOController extends BaseController {
-    private final MinioService minioService;
+    private final MinioServiceImpl minioService;
 
     @Operation(summary = "Upload multiple files to MinIo")
-    @ApiResponses({
+    @ApiResponses(value = {
             @ApiResponse(responseCode = OK, description = "Upload successful"),
             @ApiResponse(responseCode = BAD_REQUEST, description = "No files uploaded"),
             @ApiResponse(responseCode = INTERNAL_SERVER_ERROR, description = "Upload failed")
@@ -63,7 +63,7 @@ public class MinIOController extends BaseController {
     }
 
     @Operation(summary = "Delete a file from MinIo")
-    @ApiResponses({
+    @ApiResponses(value = {
             @ApiResponse(responseCode = OK, description = "File deleted successfully"),
             @ApiResponse(responseCode = INTERNAL_SERVER_ERROR, description = "Deletion failed")
     })
@@ -95,7 +95,7 @@ public class MinIOController extends BaseController {
     }
 
     @Operation(summary = "Download a file from MinIo")
-    @ApiResponses({
+    @ApiResponses(value = {
             @ApiResponse(responseCode = OK, description = "Download successful"),
             @ApiResponse(responseCode = INTERNAL_SERVER_ERROR, description = "Download failed")
     })
@@ -111,7 +111,7 @@ public class MinIOController extends BaseController {
     }
 
     @Operation(summary = "List files and folders from S3")
-    @ApiResponses({
+    @ApiResponses(value = {
             @ApiResponse(responseCode = OK, description = "Files retrieved successfully"),
             @ApiResponse(responseCode = INTERNAL_SERVER_ERROR, description = "List operation failed")
     })

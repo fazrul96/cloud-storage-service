@@ -1,4 +1,4 @@
-package com.cloud.storage_service.service.storage;
+package com.cloud.storage_service.service.impl;
 
 import com.cloud.storage_service.config.minio.MinioConfiguration;
 import com.cloud.storage_service.constants.GeneralConstant;
@@ -44,7 +44,7 @@ import static com.cloud.storage_service.constants.GeneralConstant.*;
         "PMD.PrematureDeclaration",
         "PMD.NPathComplexity",
         "PMD.CognitiveComplexity"})
-public class MinioService {
+public class MinioServiceImpl {
     private final MinioClient minioClient;
     private final MinioConfiguration minioConfig;
 
@@ -105,7 +105,6 @@ public class MinioService {
 
         return uploadedFileNames;
     }
-
 
     public List<String> uploadFiles(List<MultipartFile> files, String title)
             throws IOException, MinioException, NoSuchAlgorithmException, InvalidKeyException {
