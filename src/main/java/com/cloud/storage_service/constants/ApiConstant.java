@@ -44,6 +44,7 @@ public class ApiConstant {
         public static final String GET_FILE_INFO = BASE + "/getFileInfo";
         public static final String GET_FILE_EXISTS = BASE + "/fileExists";
         public static final String DOWNLOAD_FILE = BASE + "/downloadFile";
+        public static final String DOWNLOAD_FILE_BY_DOCUMENT_KEY = BASE + "/downloadFileByDocumentKey";
         public static final String DOWNLOAD_FOLDER = BASE + "/downloadFolder";
         public static final String VIEW_FILE = BASE + "/viewFile";
         public static final String LIST_FILES = BASE + "/listFiles";

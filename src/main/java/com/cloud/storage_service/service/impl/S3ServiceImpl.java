@@ -61,7 +61,11 @@ public class S3ServiceImpl implements S3Service {
     private UploadResponseDto uploadSingleFile(String requestId, MultipartFile file, String prefix) {
         log.info("[RequestId: {}] Starting S3ServiceImpl.uploadSingleFile()", requestId);
 
-        String key = prefix + file.getOriginalFilename();
+        String normalized = normalizePrefix(prefix);
+
+        String key = normalized.isEmpty()
+                ? file.getOriginalFilename()
+                : normalized + "/" + file.getOriginalFilename();
 
         try (InputStream inputStream = file.getInputStream()) {
             s3Client.putObject(

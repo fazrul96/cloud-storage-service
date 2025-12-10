@@ -49,9 +49,12 @@ public class StringUtils {
      * @return a normalized prefix that is never null and always ends with "/"
      */
     public static String normalizePrefix(String prefix) {
-        if (prefix == null || prefix.isEmpty()) {
+        if (prefix == null || prefix.isBlank()) {
             return "";
         }
-        return prefix.endsWith("/") ? prefix : prefix + "/";
+
+        prefix = prefix.replaceAll("^/+", "");
+        prefix = prefix.replaceAll("/+$", "");
+        return prefix;
     }
 }

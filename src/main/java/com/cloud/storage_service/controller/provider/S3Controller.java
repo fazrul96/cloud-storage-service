@@ -1,16 +1,14 @@
 package com.cloud.storage_service.controller.provider;
 
-import com.cloud.storage_service.constants.GeneralConstant;
+import com.cloud.storage_service.config.swagger.DefaultApiResponses;
 import com.cloud.storage_service.constants.MessageConstants;
 import com.cloud.storage_service.controller.BaseController;
+import com.cloud.storage_service.dto.RequestContext;
 import com.cloud.storage_service.dto.response.ApiResponseDto;
 import com.cloud.storage_service.dto.response.UploadListResponseDto;
-import com.cloud.storage_service.exception.WebException;
 import com.cloud.storage_service.service.impl.S3ServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -42,168 +40,72 @@ public class S3Controller extends BaseController {
             summary = "Upload files to S3 storage",
             description = "Handles file upload to S3 bucket with optional prefix for key path."
     )
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = MessageConstants.HttpCodes.OK,
-                    description = MessageConstants.HttpDescription.OK_DESC),
-            @ApiResponse(responseCode = MessageConstants.HttpCodes.BAD_REQUEST,
-                    description = MessageConstants.HttpDescription.BAD_REQUEST_DESC),
-            @ApiResponse(responseCode = MessageConstants.HttpCodes.INTERNAL_SERVER_ERROR,
-                    description = MessageConstants.HttpDescription.INTERNAL_ERROR_DESC)
-    })
+    @DefaultApiResponses
     @PostMapping(path = S3.UPLOAD_FILES)
     public ApiResponseDto<UploadListResponseDto> uploadFiles(
-            @RequestHeader("userId") String userId,
+            RequestContext context,
             @RequestParam("files")
             @Parameter(name = "files", description = "List of files to upload.", required = true
-            ) List<MultipartFile> files,
-            @RequestParam(value = "prefix", required = false)
-            @Parameter(name = "prefix", description = "Optional prefix added to the file key paths.",
-                    example = "documents/"
-            ) String prefix,
-            @RequestParam(value = "language", required = false, defaultValue = GeneralConstant.Language.IN_ID)
-            @Parameter(name = "language", description = "Locale for response localization (e.g., en_US, in_ID)."
-            ) String language,
-            @RequestParam(value = "channel", required = false, defaultValue = "web")
-            @Parameter(
-                    name = "channel", description = "Source of request such as web or mobile.", example = "web"
-            ) String channel,
-            @RequestParam(value = "requestId", required = false)
-            @Parameter(
-                    name = "requestId",
-                    description = "Unique identifier for the request. Auto-generated if missing.",
-                    example = "c1f23ba4-9123-4bd8-a1ea-9a123456abcd"
-            ) String requestId
+            ) List<MultipartFile> files
     ) {
-        requestId = resolveRequestId(requestId);
-        log.info("[RequestId: {}] Starting S3Controller.uploadFiles()", requestId);
-
-        HttpStatus httpStatus = HttpStatus.OK;
-
-        try {
-            UploadListResponseDto response = s3Service.processUploadFiles(requestId, files, prefix);
-            return getResponseMessage(language, channel, requestId, httpStatus, httpStatus.getReasonPhrase(), response, MessageConstants.HttpDescription.OK_DESC);
-
-        } catch (WebException we) {
-            log.error("[RequestId: {}] S3Controller.uploadFiles() ERROR {}", requestId, we.getMessage());
-            return getResponseMessage(language, channel, requestId, HttpStatus.BAD_REQUEST, MessageConstants.HttpDescription.BAD_REQUEST_DESC, null, we.getMessage());
-
-        } catch (Exception e) {
-            log.error("[RequestId: {}] S3Controller.uploadFiles() ERROR {}", requestId, e.getMessage());
-            return getResponseMessage(language, channel, requestId, HttpStatus.INTERNAL_SERVER_ERROR, MessageConstants.HttpDescription.INTERNAL_ERROR_DESC, null, e.getMessage());
-        }
+        logRequest(context.getRequestId(), "S3Controller.uploadFiles()");
+        return handleRequest(context, () -> s3Service.processUploadFiles(
+                context.getRequestId(), files, context.getPrefix()));
     }
 
     @Operation(summary = "Delete a file from S3")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = MessageConstants.HttpCodes.OK,
-                    description = MessageConstants.HttpDescription.OK_DESC),
-            @ApiResponse(responseCode = MessageConstants.HttpCodes.INTERNAL_SERVER_ERROR,
-                    description = MessageConstants.HttpDescription.INTERNAL_ERROR_DESC)
-    })
+    @DefaultApiResponses
     @DeleteMapping(path = S3.DELETE_FILE)
     public ApiResponseDto<String> deleteFile(
+            RequestContext context,
             @Parameter(description = "Name of the file to delete", required = true)
-            @RequestParam("fileName") String fileName,
-            @RequestParam(value = "language", required = false, defaultValue = GeneralConstant.Language.IN_ID)
-            @Parameter(name = "language", description = "Locale for response localization (e.g., en_US, in_ID)."
-            ) String language,
-            @RequestParam(value = "channel", required = false, defaultValue = "web")
-            @Parameter(
-                    name = "channel", description = "Source of request such as web or mobile.", example = "web"
-            ) String channel,
-            @RequestParam(value = "requestId", required = false)
-            @Parameter(
-                    name = "requestId",
-                    description = "Unique identifier for the request. Auto-generated if missing.",
-                    example = "c1f23ba4-9123-4bd8-a1ea-9a123456abcd"
-            ) String requestId
+            @RequestParam("fileName") String fileName
     ) {
-        requestId = resolveRequestId(requestId);
-        log.info("[RequestId: {}] Starting S3Controller.deleteFile()", requestId);
+        logRequest(context.getRequestId(), "S3Controller.deleteFile()");
 
         HttpStatus httpStatus = HttpStatus.OK;
 
         s3Service.deleteFile(fileName);
-        return getResponseMessage(language, channel, requestId, httpStatus, httpStatus.getReasonPhrase(), null, MessageConstants.HttpDescription.OK_DESC);
+        return getResponseMessage(context.getLanguage(), context.getChannel(), context.getRequestId(), httpStatus,
+                httpStatus.getReasonPhrase(), null, MessageConstants.HttpDescription.OK_DESC);
     }
 
     @Operation(summary = "Delete a folder from S3")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = MessageConstants.HttpCodes.OK,
-                    description = MessageConstants.HttpDescription.OK_DESC),
-            @ApiResponse(responseCode = MessageConstants.HttpCodes.INTERNAL_SERVER_ERROR,
-                    description = MessageConstants.HttpDescription.INTERNAL_ERROR_DESC)
-    })
+    @DefaultApiResponses
     @DeleteMapping(path = S3.DELETE_FOLDER)
     public ApiResponseDto<String> deleteFolder(
+            RequestContext context,
             @Parameter(description = "Name of the folder to delete", required = true)
-            @RequestParam("folderName") String folderName,
-            @RequestParam(value = "language", required = false, defaultValue = GeneralConstant.Language.IN_ID)
-            @Parameter(name = "language", description = "Locale for response localization (e.g., en_US, in_ID)."
-            ) String language,
-            @RequestParam(value = "channel", required = false, defaultValue = "web")
-            @Parameter(
-                    name = "channel", description = "Source of request such as web or mobile.", example = "web"
-            ) String channel,
-            @RequestParam(value = "requestId", required = false)
-            @Parameter(
-                    name = "requestId",
-                    description = "Unique identifier for the request. Auto-generated if missing.",
-                    example = "c1f23ba4-9123-4bd8-a1ea-9a123456abcd"
-            ) String requestId
+            @RequestParam("folderName") String folderName
     ) {
-        requestId = resolveRequestId(requestId);
-        log.info("[RequestId: {}] Starting S3Controller.deleteFolder()", requestId);
+        logRequest(context.getRequestId(), "S3Controller.deleteFolder()");
 
         HttpStatus httpStatus = HttpStatus.OK;
 
         s3Service.deleteFolder(folderName);
-        return getResponseMessage(language, channel, requestId, httpStatus, httpStatus.getReasonPhrase(), null, MessageConstants.HttpDescription.OK_DESC);
+        return getResponseMessage(context.getLanguage(), context.getChannel(), context.getRequestId(), httpStatus,
+                httpStatus.getReasonPhrase(), null, MessageConstants.HttpDescription.OK_DESC);
     }
 
     @Operation(summary = "Check if a file exists in S3")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = MessageConstants.HttpCodes.OK,
-                    description = MessageConstants.HttpDescription.OK_DESC),
-            @ApiResponse(responseCode = MessageConstants.HttpCodes.INTERNAL_SERVER_ERROR,
-                    description = MessageConstants.HttpDescription.INTERNAL_ERROR_DESC)
-    })
+    @DefaultApiResponses
     @GetMapping(path = S3.GET_FILE_EXISTS)
     public ApiResponseDto<Map<String, Boolean>> fileExists(
+            RequestContext context,
             @Parameter(description = "Name of the file to check", required = true)
-            @RequestParam("fileName") String fileName,
-            @RequestParam(value = "language", required = false, defaultValue = GeneralConstant.Language.IN_ID)
-            @Parameter(name = "language", description = "Locale for response localization (e.g., en_US, in_ID)."
-            ) String language,
-            @RequestParam(value = "channel", required = false, defaultValue = "web")
-            @Parameter(
-                    name = "channel", description = "Source of request such as web or mobile.", example = "web"
-            ) String channel,
-            @RequestParam(value = "requestId", required = false)
-            @Parameter(
-                    name = "requestId",
-                    description = "Unique identifier for the request. Auto-generated if missing.",
-                    example = "c1f23ba4-9123-4bd8-a1ea-9a123456abcd"
-            ) String requestId
+            @RequestParam("fileName") String fileName
     ) {
-        requestId = resolveRequestId(requestId);
-        log.info("[RequestId: {}] Starting S3Controller.fileExists()", requestId);
+        logRequest(context.getRequestId(), "S3Controller.fileExists()");
 
         HttpStatus httpStatus = HttpStatus.OK;
 
         boolean exists = s3Service.fileExists(fileName);
-        return getResponseMessage(language, channel, requestId, httpStatus, httpStatus.getReasonPhrase(), null, MessageConstants.HttpDescription.OK_DESC);
+        return getResponseMessage(context.getLanguage(), context.getChannel(), context.getRequestId(), httpStatus,
+                httpStatus.getReasonPhrase(), null, MessageConstants.HttpDescription.OK_DESC);
     }
 
-    @Operation(summary = "Download a file from S3")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = MessageConstants.HttpCodes.OK,
-                    description = MessageConstants.HttpDescription.OK_DESC),
-            @ApiResponse(responseCode = MessageConstants.HttpCodes.BAD_REQUEST,
-                    description = MessageConstants.HttpDescription.BAD_REQUEST_DESC),
-            @ApiResponse(responseCode = MessageConstants.HttpCodes.INTERNAL_SERVER_ERROR,
-                    description = MessageConstants.HttpDescription.INTERNAL_ERROR_DESC)
-    })
+    @Operation(summary = "Download a file from S3 using filename")
+    @DefaultApiResponses
     @GetMapping(path = S3.DOWNLOAD_FILE)
     public void downloadFile(
             @Parameter(description = "Name of the file to download", required = true)
@@ -222,15 +124,29 @@ public class S3Controller extends BaseController {
         }
     }
 
+    @Operation(summary = "Download a file from S3 using key")
+    @DefaultApiResponses
+    @GetMapping(path = S3.DOWNLOAD_FILE_BY_DOCUMENT_KEY)
+    public void downloadFileByDocumentKey(
+            @RequestParam("documentKey") String key,
+            HttpServletResponse response
+    ) {
+        try (ResponseInputStream<GetObjectResponse> s3Object = s3Service.viewDownloadFile(key)) {
+            String downloadName = key.substring(key.lastIndexOf("/") + 1);
+
+            response.setContentType(s3Object.response().contentType());
+            response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + downloadName + "\"");
+            s3Object.transferTo(response.getOutputStream());
+            response.flushBuffer();
+
+        } catch (Exception e) {
+            log.error("Download failed", e);
+            response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+        }
+    }
+
     @Operation(summary = "Download a folder from S3")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = MessageConstants.HttpCodes.OK,
-                    description = MessageConstants.HttpDescription.OK_DESC),
-            @ApiResponse(responseCode = MessageConstants.HttpCodes.BAD_REQUEST,
-                    description = MessageConstants.HttpDescription.BAD_REQUEST_DESC),
-            @ApiResponse(responseCode = MessageConstants.HttpCodes.INTERNAL_SERVER_ERROR,
-                    description = MessageConstants.HttpDescription.INTERNAL_ERROR_DESC)
-    })
+    @DefaultApiResponses
     @GetMapping(path = S3.DOWNLOAD_FOLDER)
     public void downloadFolder(
             @Parameter(description = "Name of the folder to download", required = true)
@@ -255,14 +171,7 @@ public class S3Controller extends BaseController {
     }
 
     @Operation(summary = "View a file from S3 inline")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = MessageConstants.HttpCodes.OK,
-                    description = MessageConstants.HttpDescription.OK_DESC),
-            @ApiResponse(responseCode = MessageConstants.HttpCodes.BAD_REQUEST,
-                    description = MessageConstants.HttpDescription.BAD_REQUEST_DESC),
-            @ApiResponse(responseCode = MessageConstants.HttpCodes.INTERNAL_SERVER_ERROR,
-                    description = MessageConstants.HttpDescription.INTERNAL_ERROR_DESC)
-    })
+    @DefaultApiResponses
     @GetMapping(path = S3.VIEW_FILE)
     public void viewFile(
             @Parameter(description = "Name of the file to view", required = true)
@@ -282,76 +191,22 @@ public class S3Controller extends BaseController {
     }
 
     @Operation(summary = "List files and folders from S3")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = MessageConstants.HttpCodes.OK,
-                    description = MessageConstants.HttpDescription.OK_DESC),
-            @ApiResponse(responseCode = MessageConstants.HttpCodes.INTERNAL_SERVER_ERROR,
-                    description = MessageConstants.HttpDescription.INTERNAL_ERROR_DESC)
-    })
+    @DefaultApiResponses
     @GetMapping(path = S3.LIST_FILES)
-    public ApiResponseDto<Map<String, Object>> listFiles(
-            @Parameter(description = "Optional prefix to filter files/folders")
-            @RequestParam(required = false) String prefix,
-            @RequestParam(value = "language", required = false, defaultValue = GeneralConstant.Language.IN_ID)
-            @Parameter(name = "language", description = "Locale for response localization (e.g., en_US, in_ID)."
-            ) String language,
-            @RequestParam(value = "channel", required = false, defaultValue = "web")
-            @Parameter(
-                    name = "channel", description = "Source of request such as web or mobile.", example = "web"
-            ) String channel,
-            @RequestParam(value = "requestId", required = false)
-            @Parameter(
-                    name = "requestId",
-                    description = "Unique identifier for the request. Auto-generated if missing.",
-                    example = "c1f23ba4-9123-4bd8-a1ea-9a123456abcd"
-            ) String requestId
-    ) {
-        requestId = resolveRequestId(requestId);
-        log.info("[RequestId: {}] Starting S3Controller.listFiles()", requestId);
-
-        HttpStatus httpStatus = HttpStatus.OK;
-
-        Map<String, Object> result = s3Service.listFiles(prefix);
-        return getResponseMessage(language, channel, requestId, httpStatus, httpStatus.getReasonPhrase(), result, MessageConstants.HttpDescription.OK_DESC);
+    public ApiResponseDto<Map<String, Object>> listFiles(RequestContext context) {
+        logRequest(context.getRequestId(), "S3Controller.listFiles()");
+        return handleRequest(context, () -> s3Service.listFiles(context.getPrefix()));
     }
 
     @Operation(summary = "Generate presigned URL to download a file from S3")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = MessageConstants.HttpCodes.OK,
-                    description = MessageConstants.HttpDescription.OK_DESC),
-            @ApiResponse(responseCode = MessageConstants.HttpCodes.INTERNAL_SERVER_ERROR,
-                    description = MessageConstants.HttpDescription.INTERNAL_ERROR_DESC)
-    })
+    @DefaultApiResponses
     @GetMapping(path = S3.PRESIGN_URL)
     public ApiResponseDto<String> getPresignedUrl(
+            RequestContext context,
             @Parameter(description = "S3 key of the file to generate presigned URL for", required = true)
-            @RequestParam String key,
-            @RequestParam(value = "language", required = false, defaultValue = GeneralConstant.Language.IN_ID)
-            @Parameter(name = "language", description = "Locale for response localization (e.g., en_US, in_ID)."
-            ) String language,
-            @RequestParam(value = "channel", required = false, defaultValue = "web")
-            @Parameter(
-                    name = "channel", description = "Source of request such as web or mobile.", example = "web"
-            ) String channel,
-            @RequestParam(value = "requestId", required = false)
-            @Parameter(
-                    name = "requestId",
-                    description = "Unique identifier for the request. Auto-generated if missing.",
-                    example = "c1f23ba4-9123-4bd8-a1ea-9a123456abcd"
-            ) String requestId
+            @RequestParam String key
     ) {
-        requestId = resolveRequestId(requestId);
-        log.info("[RequestId: {}] Starting S3Controller.getPresignedUrl()", requestId);
-
-        HttpStatus httpStatus = HttpStatus.OK;
-
-        try {
-            String presignedUrl = s3Service.generatePresignedUrl(key);
-            return getResponseMessage(language, channel, requestId, httpStatus, httpStatus.getReasonPhrase(), presignedUrl, MessageConstants.HttpDescription.OK_DESC);
-        } catch (Exception e) {
-            log.info("[RequestId: {}] Execute S3Controller.getPresignedUrl() ERROR: {}",
-                    requestId, e.getMessage());
-            return getResponseMessage(language, channel, requestId, HttpStatus.INTERNAL_SERVER_ERROR, MessageConstants.HttpDescription.INTERNAL_ERROR_DESC, null);
-        }
+        logRequest(context.getRequestId(), "S3Controller.getPresignedUrl()");
+        return handleRequest(context, () -> s3Service.generatePresignedUrl(key));
     }
 }

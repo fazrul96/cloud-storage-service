@@ -1,12 +1,11 @@
 package com.cloud.storage_service.controller.provider;
 
+import com.cloud.storage_service.config.swagger.DefaultApiResponses;
 import com.cloud.storage_service.controller.BaseController;
 import com.cloud.storage_service.service.impl.MinioServiceImpl;
 import io.minio.errors.MinioException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.constraints.NotEmpty;
@@ -25,7 +24,6 @@ import java.util.List;
 import java.util.Map;
 
 import static com.cloud.storage_service.constants.ApiConstant.MINIO;
-import static com.cloud.storage_service.constants.MessageConstants.HttpCodes.*;
 
 @Slf4j
 @Validated
@@ -38,11 +36,7 @@ public class MinIOController extends BaseController {
     private final MinioServiceImpl minioService;
 
     @Operation(summary = "Upload multiple files to MinIo")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = OK, description = "Upload successful"),
-            @ApiResponse(responseCode = BAD_REQUEST, description = "No files uploaded"),
-            @ApiResponse(responseCode = INTERNAL_SERVER_ERROR, description = "Upload failed")
-    })
+    @DefaultApiResponses
     @PostMapping(path = MINIO.UPLOAD_FILES)
     public ResponseEntity<String> uploadFiles(
             @Parameter(description = "List of files to upload", required = true)
@@ -63,10 +57,7 @@ public class MinIOController extends BaseController {
     }
 
     @Operation(summary = "Delete a file from MinIo")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = OK, description = "File deleted successfully"),
-            @ApiResponse(responseCode = INTERNAL_SERVER_ERROR, description = "Deletion failed")
-    })
+    @DefaultApiResponses
     @DeleteMapping(path = MINIO.DELETE_FILE)
     public ResponseEntity<String> deleteFile(
             @Parameter(description = "Name of the file to delete", required = true)
@@ -95,10 +86,7 @@ public class MinIOController extends BaseController {
     }
 
     @Operation(summary = "Download a file from MinIo")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = OK, description = "Download successful"),
-            @ApiResponse(responseCode = INTERNAL_SERVER_ERROR, description = "Download failed")
-    })
+    @DefaultApiResponses
     @PostMapping(path = MINIO.DOWNLOAD_FILE)
     public ResponseEntity<Void> downloadFile(@RequestParam("fileName") String fileName, HttpServletResponse response) {
         try {
@@ -111,10 +99,7 @@ public class MinIOController extends BaseController {
     }
 
     @Operation(summary = "List files and folders from S3")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = OK, description = "Files retrieved successfully"),
-            @ApiResponse(responseCode = INTERNAL_SERVER_ERROR, description = "List operation failed")
-    })
+    @DefaultApiResponses
     @GetMapping(path = MINIO.LIST_FILES)
     public ResponseEntity<?> listFiles(
             @Parameter(description = "Optional prefix to filter files/folders")
