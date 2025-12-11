@@ -7,7 +7,6 @@ import lombok.NoArgsConstructor;
 import org.springframework.http.HttpStatus;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Builder
 @Data
@@ -23,7 +22,8 @@ public class ApiResponseDto<T> {
     private int code;
     private T data;
 
-    public ApiResponseDto(String status, String message, String requestId, String language, String channel, int code, T data) {
+    public ApiResponseDto(
+            String status, String message, String requestId, String language, String channel, int code, T data) {
         this.status = status;
         this.message = message;
         this.requestId = requestId;
@@ -34,7 +34,6 @@ public class ApiResponseDto<T> {
     }
 
     public ApiResponseDto(String requestId, String channel, String language) {
-        requestId = requestId == null ? UUID.randomUUID().toString() : requestId;
         this.setRequestId(requestId);
         this.setChannel(channel);
         this.setLanguage(language);

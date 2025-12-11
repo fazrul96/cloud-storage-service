@@ -53,8 +53,8 @@ public class StringUtils {
             return "";
         }
 
-        prefix = prefix.replaceAll("^/+", "");
-        prefix = prefix.replaceAll("/+$", "");
-        return prefix;
+        return prefix
+                .replaceAll("^/+", "")
+                .replaceAll("/+$", "");
     }
 }

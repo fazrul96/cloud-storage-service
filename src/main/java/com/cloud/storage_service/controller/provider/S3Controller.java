@@ -36,6 +36,11 @@ import static com.cloud.storage_service.constants.ApiConstant.S3;
 public class S3Controller extends BaseController {
     private final S3ServiceImpl s3Service;
 
+    @Override
+    protected String getControllerName() {
+        return "S3Controller";
+    }
+
     @Operation(
             summary = "Upload files to S3 storage",
             description = "Handles file upload to S3 bucket with optional prefix for key path."
@@ -56,16 +61,12 @@ public class S3Controller extends BaseController {
     @Operation(summary = "Delete a file from S3")
     @DefaultApiResponses
     @DeleteMapping(path = S3.DELETE_FILE)
-    public ApiResponseDto<String> deleteFile(
-            RequestContext context,
-            @Parameter(description = "Name of the file to delete", required = true)
-            @RequestParam("fileName") String fileName
-    ) {
+    public ApiResponseDto<String> deleteFile(RequestContext context) {
         logRequest(context.getRequestId(), "S3Controller.deleteFile()");
 
         HttpStatus httpStatus = HttpStatus.OK;
 
-        s3Service.deleteFile(fileName);
+        s3Service.deleteFile(context.getFileName());
         return getResponseMessage(context.getLanguage(), context.getChannel(), context.getRequestId(), httpStatus,
                 httpStatus.getReasonPhrase(), null, MessageConstants.HttpDescription.OK_DESC);
     }
@@ -73,16 +74,12 @@ public class S3Controller extends BaseController {
     @Operation(summary = "Delete a folder from S3")
     @DefaultApiResponses
     @DeleteMapping(path = S3.DELETE_FOLDER)
-    public ApiResponseDto<String> deleteFolder(
-            RequestContext context,
-            @Parameter(description = "Name of the folder to delete", required = true)
-            @RequestParam("folderName") String folderName
-    ) {
+    public ApiResponseDto<String> deleteFolder(RequestContext context) {
         logRequest(context.getRequestId(), "S3Controller.deleteFolder()");
 
         HttpStatus httpStatus = HttpStatus.OK;
 
-        s3Service.deleteFolder(folderName);
+        s3Service.deleteFolder(context.getFileName());
         return getResponseMessage(context.getLanguage(), context.getChannel(), context.getRequestId(), httpStatus,
                 httpStatus.getReasonPhrase(), null, MessageConstants.HttpDescription.OK_DESC);
     }
@@ -90,16 +87,12 @@ public class S3Controller extends BaseController {
     @Operation(summary = "Check if a file exists in S3")
     @DefaultApiResponses
     @GetMapping(path = S3.GET_FILE_EXISTS)
-    public ApiResponseDto<Map<String, Boolean>> fileExists(
-            RequestContext context,
-            @Parameter(description = "Name of the file to check", required = true)
-            @RequestParam("fileName") String fileName
-    ) {
+    public ApiResponseDto<Map<String, Boolean>> fileExists(RequestContext context) {
         logRequest(context.getRequestId(), "S3Controller.fileExists()");
 
         HttpStatus httpStatus = HttpStatus.OK;
 
-        boolean exists = s3Service.fileExists(fileName);
+        s3Service.fileExists(context.getFileName());
         return getResponseMessage(context.getLanguage(), context.getChannel(), context.getRequestId(), httpStatus,
                 httpStatus.getReasonPhrase(), null, MessageConstants.HttpDescription.OK_DESC);
     }
@@ -107,15 +100,14 @@ public class S3Controller extends BaseController {
     @Operation(summary = "Download a file from S3 using filename")
     @DefaultApiResponses
     @GetMapping(path = S3.DOWNLOAD_FILE)
-    public void downloadFile(
-            @Parameter(description = "Name of the file to download", required = true)
-            @RequestParam("fileName") String fileName,
-            HttpServletResponse response) {
+    public void downloadFile(RequestContext context, HttpServletResponse response) {
 
         response.setStatus(HttpStatus.OK.value());
-        try (ResponseInputStream<GetObjectResponse> s3Object = s3Service.viewDownloadFile(fileName)) {
+
+        try (ResponseInputStream<GetObjectResponse> s3Object = s3Service.viewDownloadFile(context.getFileName())) {
             response.setContentType(s3Object.response().contentType());
-            response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"");
+            response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\""
+                    + context.getFileName() + "\"");
             s3Object.transferTo(response.getOutputStream());
             response.flushBuffer();
         } catch (Exception e) {
@@ -127,12 +119,9 @@ public class S3Controller extends BaseController {
     @Operation(summary = "Download a file from S3 using key")
     @DefaultApiResponses
     @GetMapping(path = S3.DOWNLOAD_FILE_BY_DOCUMENT_KEY)
-    public void downloadFileByDocumentKey(
-            @RequestParam("documentKey") String key,
-            HttpServletResponse response
-    ) {
+    public void downloadFileByDocumentKey(@RequestParam("documentKey") String key, HttpServletResponse response) {
         try (ResponseInputStream<GetObjectResponse> s3Object = s3Service.viewDownloadFile(key)) {
-            String downloadName = key.substring(key.lastIndexOf("/") + 1);
+            String downloadName = key.substring(key.lastIndexOf('/') + 1);
 
             response.setContentType(s3Object.response().contentType());
             response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + downloadName + "\"");
@@ -148,17 +137,15 @@ public class S3Controller extends BaseController {
     @Operation(summary = "Download a folder from S3")
     @DefaultApiResponses
     @GetMapping(path = S3.DOWNLOAD_FOLDER)
-    public void downloadFolder(
-            @Parameter(description = "Name of the folder to download", required = true)
-            @RequestParam("folderName") String folderName,
-            HttpServletResponse response) {
+    public void downloadFolder(RequestContext context, HttpServletResponse response) {
 
         try {
-            byte[] zipBytes = s3Service.downloadFolderAsZip(folderName);
+            byte[] zipBytes = s3Service.downloadFolderAsZip(context.getFileName());
 
             response.setStatus(HttpStatus.OK.value());
             response.setContentType("application/zip");
-            response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + folderName + ".zip\"");
+            response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\""
+                    + context.getFileName() + ".zip\"");
             response.setContentLength(zipBytes.length);
 
             response.getOutputStream().write(zipBytes);
@@ -174,14 +161,14 @@ public class S3Controller extends BaseController {
     @DefaultApiResponses
     @GetMapping(path = S3.VIEW_FILE)
     public void viewFile(
-            @Parameter(description = "Name of the file to view", required = true)
-            @RequestParam("fileName") String fileName,
+            RequestContext context,
             HttpServletResponse response) {
 
         response.setStatus(HttpStatus.OK.value());
-        try (ResponseInputStream<GetObjectResponse> s3Object = s3Service.viewDownloadFile(fileName)) {
+        try (ResponseInputStream<GetObjectResponse> s3Object = s3Service.viewDownloadFile(context.getFileName())) {
             response.setContentType(s3Object.response().contentType());
-            response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + fileName + "\"");
+            response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\""
+                    + context.getFileName() + "\"");
             s3Object.transferTo(response.getOutputStream());
             response.flushBuffer();
         } catch (Exception e) {

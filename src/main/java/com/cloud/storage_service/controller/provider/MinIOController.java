@@ -35,6 +35,11 @@ import static com.cloud.storage_service.constants.ApiConstant.MINIO;
 public class MinIOController extends BaseController {
     private final MinioServiceImpl minioService;
 
+    @Override
+    protected String getControllerName() {
+        return "MinIOController";
+    }
+
     @Operation(summary = "Upload multiple files to MinIo")
     @DefaultApiResponses
     @PostMapping(path = MINIO.UPLOAD_FILES)

@@ -25,6 +25,12 @@ import java.util.function.Supplier;
 @NoArgsConstructor
 public abstract class BaseController {
     /**
+     * Every controller provides its own name.
+     * Useful for debugging/logging, and satisfies Checkstyle.
+     */
+    protected abstract String getControllerName();
+
+    /**
      * Resolves and returns the request ID. If the provided requestId is null,
      * a new requestId will be generated.
      *
@@ -32,10 +38,11 @@ public abstract class BaseController {
      * @return The resolved or generated request ID.
      */
     protected static String resolveRequestId(String requestId) {
-        return (requestId == null || requestId.isBlank())
+        return requestId == null || requestId.isBlank()
                 ? UUID.randomUUID().toString()
                 : requestId;
     }
+
 
     @ModelAttribute
     protected RequestContext requestContext(
@@ -44,6 +51,8 @@ public abstract class BaseController {
             @Parameter(name = "prefix", description = "Optional prefix added to the file key paths.",
                     example = "documents/"
             ) String prefix,
+            @Parameter(description = "Name of the file to delete", required = true)
+            @RequestParam(value = "fileName", required = false) String fileName,
             @RequestParam(value = "language", required = false)
             @Parameter(
                     name = "language",
@@ -64,6 +73,7 @@ public abstract class BaseController {
     ) {
         RequestContext context = new RequestContext();
         context.setUserId(userId);
+        context.setFileName(fileName);
         context.setPrefix(prefix);
         context.setLanguage(language != null ? language : GeneralConstant.Language.IN_ID);
         context.setChannel(channel != null ? channel : "web");
@@ -96,9 +106,9 @@ public abstract class BaseController {
      * Centralized handler to execute a service call and wrap the response in ApiResponseDto.
      * Handles logging, exception catching, and response formatting.
      *
-     * @param context     RequestContext containing request metadata
+     * @param context RequestContext containing request metadata
      * @param serviceCall Supplier with the service logic
-     * @param <T>         type of the response
+     * @param <T> type of the response
      * @return ApiResponseDto containing the response or error
      */
     protected <T> ApiResponseDto<T> handleRequest(RequestContext context, Supplier<T> serviceCall) {
@@ -152,14 +162,14 @@ public abstract class BaseController {
     /**
      * Logs the start of the request processing, including the method name and request ID.
      *
-     * @param requestId  The unique request ID for tracking.
+     * @param requestId The unique request ID for tracking.
      * @param methodName The name of the method that is being executed.
      */
-    protected void logRequest(String requestId, String methodName) {
+    public void logRequest(String requestId, String methodName) {
         log.info("[RequestId: {}] Execute {}", requestId, methodName);
     }
 
-    protected void logRequest(String requestId, String methodName, Exception e) {
+    public void logRequest(String requestId, String methodName, Exception e) {
         log.error("[RequestId: {}] Execute {} ERROR: {}", requestId, methodName, e.getMessage());
     }
 }

@@ -12,6 +12,7 @@ import java.util.UUID;
 public class RequestContext {
     private String userId;
     private String prefix;
+    private String fileName;
     private String language = "in_ID";
     private String channel = "web";
     private String requestId = UUID.randomUUID().toString();

@@ -1,11 +1,10 @@
 package com.cloud.storage_service.service;
 
 import com.cloud.storage_service.dto.response.UploadListResponseDto;
-import com.cloud.storage_service.exception.WebException;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
 public interface S3Service {
-    UploadListResponseDto processUploadFiles(String requestId, List<MultipartFile> files, String prefix) throws WebException;
+    UploadListResponseDto processUploadFiles(String requestId, List<MultipartFile> files, String prefix);
 }

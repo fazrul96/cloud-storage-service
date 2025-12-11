@@ -36,6 +36,7 @@ import static software.amazon.awssdk.http.HttpStatusCode.NOT_FOUND;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@SuppressWarnings({"PMD.AvoidInstantiatingObjectsInLoops"})
 public class S3ServiceImpl implements S3Service {
     private final S3Client s3Client;
     private final S3Configuration s3Configuration;
@@ -44,7 +45,8 @@ public class S3ServiceImpl implements S3Service {
     /**
      * Upload a file to S3 with the specified key.
      */
-    public UploadListResponseDto processUploadFiles(String requestId, List<MultipartFile> files, String prefix) throws WebException {
+    @Override
+    public UploadListResponseDto processUploadFiles(String requestId, List<MultipartFile> files, String prefix) {
         log.info("[RequestId: {}] Starting S3ServiceImpl.processUploadFiles()", requestId);
 
         validateFiles(files);
@@ -108,7 +110,10 @@ public class S3ServiceImpl implements S3Service {
 
     private String extractFilename(String key) {
         int index = key.lastIndexOf('/');
-        return (index != -1) ? key.substring(index + 1) : key;
+        if (index == -1) {
+            return key;
+        }
+        return key.substring(index + 1);
     }
 
     /**
@@ -123,13 +128,9 @@ public class S3ServiceImpl implements S3Service {
     }
 
     public byte[] downloadFolderAsZip(String folderKey) throws IOException {
-        if (!folderKey.endsWith("/")) {
-            folderKey += "/";
-        }
-
         ListObjectsV2Request listRequest = ListObjectsV2Request.builder()
                 .bucket(s3Configuration.getBucketName())
-                .prefix(folderKey)
+                .prefix(ensureTrailingSlash(folderKey))
                 .build();
 
         ListObjectsV2Response listResponse = s3Client.listObjectsV2(listRequest);
@@ -163,13 +164,9 @@ public class S3ServiceImpl implements S3Service {
     }
 
     public void deleteFolder(String folderKey) {
-        if (!folderKey.endsWith("/")) {
-            folderKey += "/";
-        }
-
         ListObjectsV2Request listRequest = ListObjectsV2Request.builder()
                 .bucket(s3Configuration.getBucketName())
-                .prefix(folderKey)
+                .prefix( ensureTrailingSlash(folderKey))
                 .build();
 
         ListObjectsV2Response listResponse = s3Client.listObjectsV2(listRequest);
@@ -269,9 +266,23 @@ public class S3ServiceImpl implements S3Service {
         return presignedRequest.url().toExternalForm();
     }
 
-    private void validateFiles(List<MultipartFile> files) throws WebException {
+    private void validateFiles(List<MultipartFile> files) {
         if (files == null || files.isEmpty()) {
             throw new WebException("Uploaded file list cannot be empty");
         }
+    }
+
+    public static String ensureTrailingSlash(String folderKey) {
+        if (folderKey == null || folderKey.isBlank()) {
+            return "";
+        }
+
+        String normalized = folderKey;
+
+        if (!normalized.endsWith("/")) {
+            normalized = normalized + "/";
+        }
+
+        return normalized;
     }
 }

@@ -10,8 +10,11 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @ApiResponses(value = {
-        @ApiResponse(responseCode = MessageConstants.HttpCodes.OK, description = MessageConstants.HttpDescription.OK_DESC),
-        @ApiResponse(responseCode = MessageConstants.HttpCodes.BAD_REQUEST, description = MessageConstants.HttpDescription.BAD_REQUEST_DESC),
-        @ApiResponse(responseCode = MessageConstants.HttpCodes.INTERNAL_SERVER_ERROR, description = MessageConstants.HttpDescription.INTERNAL_ERROR_DESC)
+        @ApiResponse(responseCode = MessageConstants.HttpCodes.OK,
+                description = MessageConstants.HttpDescription.OK_DESC),
+        @ApiResponse(responseCode = MessageConstants.HttpCodes.BAD_REQUEST,
+                description = MessageConstants.HttpDescription.BAD_REQUEST_DESC),
+        @ApiResponse(responseCode = MessageConstants.HttpCodes.INTERNAL_SERVER_ERROR,
+                description = MessageConstants.HttpDescription.INTERNAL_ERROR_DESC)
 })
 public @interface DefaultApiResponses { }
