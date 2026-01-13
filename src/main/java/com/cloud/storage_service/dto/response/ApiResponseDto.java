@@ -53,4 +53,31 @@ public class ApiResponseDto<T> {
         this.setStatus(status);
         this.setMessage(responseDesc);
     }
+
+    public static <T> ApiResponseDto<T> unauthorized(String message) {
+        return ApiResponseDto.<T>builder()
+                .status("FAILED")
+                .message(message)
+                .code(HttpStatus.UNAUTHORIZED.value())
+                .timestamp(LocalDateTime.now())
+                .build();
+    }
+
+    public static <T> ApiResponseDto<T> success(T data) {
+        return ApiResponseDto.<T>builder()
+                .status("SUCCESS")
+                .code(HttpStatus.OK.value())
+                .timestamp(LocalDateTime.now())
+                .data(data)
+                .build();
+    }
+
+    public static <T> ApiResponseDto<T> error(HttpStatus status, String message) {
+        return ApiResponseDto.<T>builder()
+                .status("FAILED")
+                .code(status.value())
+                .message(message)
+                .timestamp(LocalDateTime.now())
+                .build();
+    }
 }
