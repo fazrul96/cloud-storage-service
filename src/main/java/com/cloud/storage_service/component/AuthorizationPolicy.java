@@ -40,7 +40,8 @@ public class AuthorizationPolicy {
                 "/swagger-ui/**",
                 "/v3/api-docs/**",
                 "/api-docs/**",
-                "/swagger-resources/**"
+                "/swagger-resources/**",
+                "/api/v1/s3/downloadFileByDocumentKey"
         };
     }
 }
