@@ -76,6 +76,7 @@ security:
       - "https://portfolio-portal.mfzrl.cyou"
       - "https://mosque-portal.mfzrl.cyou"
       - "https://insurance-portal.mfzrl.cyou"
+      - "null"
     allowed-methods:
       - GET
       - POST
