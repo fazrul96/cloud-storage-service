@@ -67,3 +67,26 @@ okta:
     client-secret: ${OKTA_OAUTH2_CLIENT_SECRET}
     audience: ${OKTA_OAUTH2_AUDIENCE}
     grant-type: ${OKTA_OAUTH2_GRANT_TYPE}
+security:
+  cors:
+    allowed-origins:
+      - "http://localhost:3000"
+      - "http://localhost:5173"
+      - "http://localhost:4200"
+      - "https://portfolio-portal.mfzrl.cyou"
+      - "https://mosque-portal.mfzrl.cyou"
+      - "https://insurance-portal.mfzrl.cyou"
+    allowed-methods:
+      - GET
+      - POST
+      - PUT
+      - PATCH
+      - DELETE
+      - OPTIONS
+    allowed-headers:
+      - Authorization
+      - Content-Type
+      - Cache-Control
+      - UserId
+    allow-credentials: true
+    max-age: 3600
